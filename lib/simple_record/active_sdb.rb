@@ -214,7 +214,7 @@ module SimpleRecord
                 #
                 def domain
                     unless @domain
-                        if defined? ActiveSupport::CoreExtensions::String::Inflections
+                        if defined?(ActiveSupport::CoreExtensions::String::Inflections) || defined?(ActiveSupport::Inflector::Inflections)
                             @domain = name.tableize
                         else
                             @domain = name.downcase

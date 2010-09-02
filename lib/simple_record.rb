@@ -26,6 +26,7 @@
 
 require 'aws'
 require 'base64'
+require 'active_model'
 require File.expand_path(File.dirname(__FILE__) + "/simple_record/attributes")
 require File.expand_path(File.dirname(__FILE__) + "/simple_record/active_sdb")
 require File.expand_path(File.dirname(__FILE__) + "/simple_record/callbacks")
@@ -123,6 +124,11 @@ module SimpleRecord
 
     class Base < SimpleRecord::ActiveSdb::Base
 
+         include ActiveModel::Conversion
+        include ActiveModel::Naming
+        include ActiveModel::Validations
+        include ActiveModel::Serialization
+
         include SimpleRecord::Translations
 #        include SimpleRecord::Attributes
         extend SimpleRecord::Attributes
@@ -152,6 +158,7 @@ module SimpleRecord
             #we have to handle the virtuals.
             Attributes.handle_virtuals(attrs)
 
+            # todo: we could try replacing this with ActiveModel::Errors.new, http://github.com/rails/rails/tree/master/activemodel
             @errors=SimpleRecord_errors.new
             @dirty = {}
 
@@ -228,12 +235,14 @@ module SimpleRecord
             self.class.domain
         end
 
+
         def self.domain
             unless @domain
                 # This strips off the module if there is one.
                 n2 = name.split('::').last || name
-                puts 'n2=' + n2
-                if defined? ActiveSupport::CoreExtensions::String::Inflections
+#                puts 'n2=' + n2
+                if n2.respond_to?(:tableize)
+#                    puts 'responds to tableize'
                     @domain = n2.tableize
                 else
                     @domain = n2.downcase
@@ -367,6 +376,11 @@ module SimpleRecord
         def new_record?
             # todo: new_record in activesdb should align with how we're defining a new record here, ie: if id is nil
             super
+        end
+
+        # Returns if the record is persisted, i.e. it’s not a new record and it was not destroyed.
+        def persisted?
+            !new_record?
         end
 
         def invalid?
@@ -855,7 +869,7 @@ module SimpleRecord
             end
 #            puts 'params2=' + params.inspect
 
-             ret = q_type == :all ? [] : nil
+            ret = q_type == :all ? [] : nil
             begin
                 results=find_with_metadata(*params)
 #                puts "RESULT=" + results.inspect

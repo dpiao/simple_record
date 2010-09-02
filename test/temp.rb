@@ -1,8 +1,11 @@
 require_relative 'my_model'
 
+puts RUBY_VERSION
+
 class ToSClass
     def to_s
-        "#{self.class.name} to_s called"
+#        "#{self.class.name} to_s called"
+        nil
     end
 end
 class InspectClass
@@ -20,8 +23,8 @@ class BothClass
 end
 
 c1 = ToSClass.new
-puts c1.inspect
-puts c1.to_s
+puts "x=" + c1.inspect
+puts "x=" + c1.to_s
 c1 = InspectClass.new
 puts c1.inspect
 puts c1.to_s

@@ -124,7 +124,7 @@ module SimpleRecord
 
     class Base < SimpleRecord::ActiveSdb::Base
 
-         include ActiveModel::Conversion
+        include ActiveModel::Conversion
         include ActiveModel::Naming
         include ActiveModel::Validations
         include ActiveModel::Serialization
@@ -199,7 +199,7 @@ module SimpleRecord
         attr_accessor :errors
 
         class << self;
-            attr_accessor :domain_prefix
+            attr_accessor :domain_prefix, :use_module_names
         end
 
         #@domain_name_for_class = nil
@@ -238,17 +238,38 @@ module SimpleRecord
 
         def self.domain
             unless @domain
-                # This strips off the module if there is one.
-                n2 = name.split('::').last || name
-#                puts 'n2=' + n2
-                if n2.respond_to?(:tableize)
-#                    puts 'responds to tableize'
-                    @domain = n2.tableize
+                if SimpleRecord::Base.use_module_names
+                    # TODO: THIS DOESN'T WORK YET
+                    @domain = ""
+                    name_split = name.split('::')
+                    name_split.each_with_index do |n1, i|
+                        # we'll pluralize the class name only
+                        if i == name_split.size-1
+                            if n1.respond_to?(:tableize)
+                                @domain = n1.tableize
+                            else
+                                @domain = n1.downcase
+                            end
+                        end
+
+                    end
+                    puts 'n2=' + n2
+                    set_domain_name @domain
                 else
-                    @domain = n2.downcase
+                    # This strips off the module if there is one.
+                    n2 = name.split('::').last || name
+                    puts 'n2=' + n2
+                    if n2.respond_to?(:tableize)
+#                    puts 'responds to tableize'
+                        @domain = n2.tableize
+                    else
+                        @domain = n2.downcase
+                    end
+                    set_domain_name @domain
                 end
-                set_domain_name @domain
+
             end
+            # We do this here in case user changes the domain_prefix on the fly
             domain_name_for_class = (SimpleRecord::Base.domain_prefix || "") + @domain.to_s
             domain_name_for_class
         end

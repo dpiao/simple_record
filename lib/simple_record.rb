@@ -958,7 +958,7 @@ module SimpleRecord
     def self.convert_condition_params(options)
       return if options.nil?
       conditions = options[:conditions]
-      if !conditions.nil? && conditions.size > 1
+      if !conditions.nil? and !(conditions.is_a? String) and conditions.size > 1
         # all after first are values
         conditions.collect! { |x|
           Translations.pad_and_offset(x)
